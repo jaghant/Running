@@ -31,23 +31,13 @@ if selected == "Running and Cycling Data Entry":
             "Running",
             "Cycling"
         ]
-        Distance = [
-            "5 KM",
-            "6 KM",
-            "7 KM",
-            "8 KM",
-            "9 KM",
-            "10 KM",
-            "12 Km",
-            "15 KM",
-            "21 KM"
-        ]
+
 
         # Onboarding New Running form
         with st.form(key="Running_form"):
             Date = st.date_input(label='Choose the date*')
             Activity = st.selectbox("Activity*", options=Activity, index=None)
-            Distance = st.selectbox("Distance KM", options=Distance, index=None)
+            Distance = st.text_input("Distance KM")
             Duration = st.text_input("Duration")
             Calories = st.number_input("Calories")
             Target_Distance = st.text_input("Target Distance")
@@ -68,7 +58,7 @@ if selected == "Running and Cycling Data Entry":
                     running_data = pd.DataFrame(
                         [
                             {
-                                "Date": Date.strftime("%Y-%m-%d"),
+                                "Date": Date.strftime("%d-%m-%Y"),
                                 "Activity": Activity,
                                 "Distance KM": Distance,
                                 "Duration": Duration,
