@@ -96,8 +96,7 @@ if selected == "Running and Cycling Reports":
 if selected == "Dashboard":
         st.subheader(f"{selected}")
         
-        with open('style.css') as f:
-            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+
         
         Left_column, Right_column = st.columns(2)
             
