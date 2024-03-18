@@ -2,7 +2,8 @@ import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 import pandas as pd
 from streamlit_option_menu import option_menu
-from pathlib import Path
+import numpy as np
+
 
 
 # Display Title and Description
@@ -20,7 +21,7 @@ selected = option_menu(
 conn = st.connection("gsheets", type=GSheetsConnection)
 existing_data = conn.read(wordsheet="Running", usecols=list(range(6)), ttl=5)
 existing_data = existing_data.dropna(how="all")
-
+df = existing_data
 if selected == "Running and Cycling Data Entry":
         st.subheader(f"{selected}")
         
@@ -94,18 +95,25 @@ if selected == "Running and Cycling Reports":
         st.dataframe(existing_data)    
 
 if selected == "Dashboard":
-        st.subheader(f"{selected}")
+        st.subheader("Running & Cycling Data Analysis")
+        st.write("----")
         
-
-        
-        Left_column, Right_column = st.columns(2)
+        # KPI Cards
+        col = st.columns(4)
             
-        with Left_column:
+        with col[0]:
             Total_distance = int(existing_data["Distance KM"].sum())
             st.metric(label="Total Distance", value=(f"{Total_distance} KM"))       
-        with Right_column:    
+        with col[1]:    
             Total_calories = int(existing_data["Calories"].sum())
-            d = st.metric(label="Total Calories", value=(f"{Total_calories}"))
-        
-    
+            st.metric(label="Total Calories", value=(f"{Total_calories}"))
+        with col[2]:
+            group_running = df[df["Activity"]=="Running"]
+            total_running_distance = int(group_running["Distance KM"].sum())
+            st.metric(label="Running Distance", value=(f"{total_running_distance} KM"))
+        with col[3]:
+            group_cycling = df[df["Activity"]=="Cycling"]
+            total_cycling_distance = int(group_cycling["Distance KM"].sum())
+            st.metric(label="Cycling Distance", value=(f"{total_cycling_distance} KM"))
+        st.write("---")
         
