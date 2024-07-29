@@ -2,3 +2,4 @@ streamlit==1.29.0
 st-gsheets-connection
 streamlit-option-menu
 plotly==5.11.0
+matplotlib==3.9.1
