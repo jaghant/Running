@@ -7,6 +7,8 @@ import plotly.express as px
 import altair as alt
 from datetime import datetime, timedelta
 import calendar
+import matplotlib.pyplot as plt
+from PIL import Image, ImageDraw
 
 
 
@@ -17,14 +19,16 @@ st.title("🏃‍♂️Running and Cycling Report🚴‍♂️")
 selected = option_menu(
         menu_title    = None,
         options       = ["Running and Cycling Data Entry", "Running and Cycling Reports", "Dashboard"],
-        icons         = ["diagram-3-fill", "bar-chart-fill"],
+        icons         = ["clipboard2-data-fill", "table", "bar-chart-fill"],
         menu_icon     = "cast",
         default_index = 0,
         orientation   = "horizontal"
 )
 
 if selected == "Running and Cycling Data Entry":
-        st.subheader(f"{selected}")
+        col = st.columns(3)
+        with col[1]:
+            st.write(f"{selected}")
         
         # Establishing a Google Sheets connection
         conn = st.connection("gsheets", type=GSheetsConnection)
@@ -91,104 +95,198 @@ if selected == "Running and Cycling Data Entry":
                     st.success("Running details successfully submitted!") 
 
 if selected == "Running and Cycling Reports":
-        st.subheader(f"{selected}")
+        col = st.columns(3)
+        with col[1]:
+            st.write(f"{selected}")
         
         conn = st.connection("gsheets", type=GSheetsConnection)
         # Fetch existing running data
+        
         existing_data = conn.read(worksheet="Running", usecols=list(range(8)), ttl=5)
         existing_data = existing_data.dropna(how="all")
         
         st.dataframe(existing_data)    
 
 if selected == "Dashboard":
-        st.subheader("Running & Cycling Data Analysis")
-        st.write("----")
+        col = st.columns(3)
+        with col[1]:
+            st.subheader("Dashboard")
         
-        conn = st.connection("gsheets", type=GSheetsConnection)
-        existing_data = conn.read(wordsheet="Running", usecols=list(range(8)), ttl=5)
-        existing_data = existing_data.dropna(how="all")
-        df = existing_data
-
-        # KPI Cards
-        col = st.columns(4)
+        selected = option_menu(
+        menu_title    = None,
+        options       = ["Yearly Report", "Daily Report"],
+        icons         = ["diagram-3-fill", "bar-chart-fill"],
+        menu_icon     = "cast",
+        default_index = 0,
+        orientation   = "horizontal"
+        )
+        if selected == "Yearly Report":
             
-        with col[0]:
-            Total_distance = int(existing_data["Distance KM"].sum())
-            st.metric(label="Total Distance", value=(f"{Total_distance} KM"))       
-        with col[1]:    
-            Total_calories = int(existing_data["Calories"].sum())
-            st.metric(label="Total Calories", value=(f"{Total_calories}"))
-        with col[2]:
-            group_running = df[df["Activity"]=="Running"]
-            total_running_distance = (group_running["Distance KM"].sum())
-            st.metric(label="Running Distance", value=(f"{total_running_distance} KM"))
-        with col[3]:
-            group_cycling = df[df["Activity"]=="Cycling"]
-            total_cycling_distance = (group_cycling["Distance KM"].sum())
-            st.metric(label="Cycling Distance", value=(f"{total_cycling_distance} KM"))
-        st.write("---")
-#---------------------- Data Charts-----------------------
-        
-        # Add new column of month
-        # df['Date'] = pd.to_datetime(df.Date)
-        # df['Month']=df['Date'].map(lambda x:x.month)
-        
-        # Add new column of year
-        # df['Year']=df['Date'].map(lambda x:x.year)
+            st.subheader("-------------🏃‍♂️-------------Yearly Report-------------🚴‍♂️-------------")
+            st.write("----")
+            conn = st.connection("gsheets", type=GSheetsConnection)
+            existing_data = conn.read(wordsheet="Running", usecols=list(range(8)), ttl=5)
+            existing_data = existing_data.dropna(how="all")
+            df = existing_data
+
+            # KPI Cards
+            col1 = st.columns(5)
+            with col1[0]:
+                st.write("Total Distance")
+            with col1[1]:
+                st.write("Duration")
+            with col1[2]:
+                st.write("Calories")
+            with col1[3]:
+                st.write("Running Distance")
+            with col1[4]:
+                st.write("Cycling Distance")                
     
-        activity = st.multiselect(
-            "Select the activity:",
-            options=df["Activity"].unique(),
-            default=df["Activity"].unique()
-        )
-        select_activity = df.query("Activity ==@activity")
-        # st.write(select_activity)
-        yearly_groupby = select_activity.groupby('Year')['Distance KM'].sum().reset_index()
-        # Create bar chart in year wise data
-        year_bars = alt.Chart(yearly_groupby).mark_bar().encode(
-            x = 'Year:Q',
-            y = 'Distance KM:Q'
-        )
+                
+            col2 = st.columns(5)
+            
+            with col2[0]:
+                Total_distance = (existing_data["Distance KM"].sum())
+                st.subheader((f"{Total_distance:.1f} KM"))
+            with col2[1]:
+                existing_data["Duration"] =  pd.to_timedelta(existing_data["Duration"])
+                timing_data = existing_data["Duration"].sum()
+                st.subheader(timing_data)
+            with col2[2]:    
+                Total_calories = int(existing_data["Calories"].sum())
+                st.subheader((f"{Total_calories}"))
+            with col2[3]:
+                group_running = df[df["Activity"]=="Running"]
+                total_running_distance = (group_running["Distance KM"].sum())
+                st.subheader((f"{total_running_distance:.1f} KM"))
+            with col2[4]:
+                group_cycling = df[df["Activity"]=="Cycling"]
+                total_cycling_distance = (group_cycling["Distance KM"].sum())
+                st.subheader((f"{total_cycling_distance:.1f} KM"))
+            st.write("---")
+    #---------------------- Data Charts-----------------------
+            
+            # Add new column of month
+            # df['Date'] = pd.to_datetime(df.Date)
+            # df['Month']=df['Date'].map(lambda x:x.month)
+            
+            # Add new column of year
+            # df['Year']=df['Date'].map(lambda x:x.year)
         
-        year_text = year_bars.mark_text(
-            align = 'center',
-            baseline = 'bottom',
-            size = 20,
-            dx=0,
-        ).encode(
-            text = 'Distance KM:Q'
-        )
+            activity = st.multiselect(
+                "Select the activity:",
+                options=df["Activity"].unique(),
+                default=df["Activity"].unique()
+            )
+            select_activity = df.query("Activity ==@activity")
+            # st.write(select_activity)
+            yearly_groupby = select_activity.groupby('Year')['Distance KM'].sum().reset_index()
+            # Create bar chart in year wise data
+            year_bars = alt.Chart(yearly_groupby).mark_bar().encode(
+                x = 'Year:Q',
+                y = 'Distance KM:Q'
+            )
+            
+            year_text = year_bars.mark_text(
+                align = 'center',
+                baseline = 'bottom',
+                size = 20,
+                dx=0,
+            ).encode(
+                text = 'Distance KM:Q'
+            )
+            
+            year_chart = (year_bars + year_text).properties(
+                width = 200,
+                height= 400
+            )
+            st.subheader("------------🏃‍♂️--------Year Wise Distance KM----------🚴‍♂️----------")
+            st.altair_chart(year_chart, use_container_width=True)
         
-        year_chart = (year_bars + year_text).properties(
-            width = 200,
-            height= 400
-        )
-        st.write("Year Wise Distance KM")
-        st.altair_chart(year_chart, use_container_width=True)
-        
-    #----------------------Last 12 Months data------------------------
-        
-        # Filter data for last 12 months
-        # last_12_months = select_activity[select_activity['Date'] >= datetime.today() - timedelta(days=365)]
-        # st.write(last_12_months)
-        monthly_groupby = select_activity.groupby('Month')['Distance KM'].sum().reset_index()
-        # st.write(monthly_groupby)
-        
-        fig_month = px.line(
-            monthly_groupby,
-            x = "Month",
-            y = "Distance KM",
-            orientation = "v",
-            title = "<b>Month Wise Running Distance</b>",
-            color_discrete_sequence = ["#12A999"] * len(monthly_groupby),
-            text="Distance KM",
-            template = "plotly_white",
-            markers="**",
-        )
-        fig_month.update_traces(texttemplate='%{text:.2s}', textposition='top center')
-        fig_month.update_layout(
-                    plot_bgcolor = "rgba(0,0,0,0)",
-                    xaxis        = (dict(showgrid=False)),
-                    yaxis        = (dict(showgrid=False))
+            
+        if selected == "Daily Report":
+                st.subheader("Daily Report")
+                st.write("----")
+                
+                
+                conn = st.connection("gsheets", type=GSheetsConnection)
+                existing_data = conn.read(wordsheet="Running", usecols=list(range(8)), ttl=5)
+                existing_data = existing_data.dropna(how="all")
+                df = existing_data
+                
+                # Define the correct order of months
+                month_order = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+                ]
+                
+                # Convert 'Month' column to categorical with the specified order
+                df['Month'] = pd.Categorical(df['Month'], categories=month_order, ordered=True)
+                sort_month=df.sort_values("Month")
+                
+                # Sort month value
+                months=sort_month["Month"].unique()
+            
+                current_month = datetime.now().month
+                current_month_name = months[current_month - 1] 
+                         
+                month = st.sidebar.multiselect(
+                "Select The Month:",
+                months,
+                default=[current_month_name]
                 )
-        st.write(fig_month)
+                year = st.sidebar.multiselect(
+                "Select The Year:",
+                options=df["Year"].unique(),
+                default=df["Year"].unique()
+                )
+                activity = st.sidebar.multiselect(
+                    "Select The Activity:",
+                    options=df["Activity"].unique(),
+                    default=df["Activity"].unique()
+                )
+                
+                daily_report = df.query("Month ==@month & Year ==@year & Activity==@activity")     
+                
+                # KPI Cards
+                col1 = st.columns(5)
+                with col1[0]:
+                    st.write("Total Distance")
+                with col1[1]:
+                    st.write("Duration")
+                with col1[2]:
+                    st.write("Calories")
+                with col1[3]:
+                    st.write("Running Distance")
+                with col1[4]:
+                    st.write("Cycling Distance")                
+                col2 = st.columns(5)
+                    
+                with col2[0]:
+                    Total_distance = (daily_report["Distance KM"].sum())
+                    st.subheader((f"{Total_distance:.1f} KM"))       
+                with col2[1]:      
+                    daily_report["Duration"] =  pd.to_timedelta(daily_report["Duration"])
+                    timing_data = daily_report["Duration"].sum()
+                    st.subheader((f"{timing_data}"))  
+                with col2[2]:
+                    Total_calories = int(daily_report["Calories"].sum())
+                    st.subheader((f"{Total_calories}"))
+                with col2[3]:
+                    group_running = daily_report[daily_report["Activity"]=="Running"]
+                    total_running_distance = (group_running["Distance KM"].sum())
+                    st.subheader((f"{total_running_distance:.1f} KM"))
+                with col2[4]:
+                    group_cycling = daily_report[daily_report["Activity"]=="Cycling"]
+                    total_cycling_distance = (group_cycling["Distance KM"].sum())
+                    st.subheader((f"{total_cycling_distance:.1f} KM"))
+                st.write("---")
+                
+                # st.line_chart(
+                #     daily_report,
+                #     x="Date",
+                #     y="Distance KM",
+                # )
+                
+                fig = px.line(daily_report, x="Date", y="Distance KM", text="Distance KM", markers=True)
+                st.plotly_chart(fig)
