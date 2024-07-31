@@ -9,8 +9,43 @@ from datetime import datetime, timedelta
 import calendar
 import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw
+from streamlit_lottie import st_lottie
+import requests
 
+col = st.columns(2)
+with col[0]:
+    def load_lottieurl(url):
+        r = requests.get(url)
+        if r.status_code != 200:
+            return None
+        return r.json()
 
+    def local_css(file_name):
+        with open(file_name) as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+            
+    local_css("style/style.css")        
+
+    # lottie_coding = load_lottieurl("https://assets2.lottiefiles.com/packages/lf20_qp1q7mct.json")
+    lottie_coding = load_lottieurl("https://lottie.host/d4771593-ddbe-4d4c-8473-0ce408df46a8/RZFTyqxTac.json")
+    st_lottie(lottie_coding, height=300, key="coding") 
+    
+with col[1]:
+    def load_lottieurl(url):
+        r = requests.get(url)
+        if r.status_code != 200:
+            return None
+        return r.json()
+
+    def local_css(file_name):
+        with open(file_name) as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+            
+    local_css("style/style.css")        
+
+    # lottie_coding = load_lottieurl("https://assets2.lottiefiles.com/packages/lf20_qp1q7mct.json")
+    lottie_coding = load_lottieurl("https://lottie.host/e16ec840-4e5c-4a97-a633-fac7402f0b1d/oevw9M7t1z.json")
+    st_lottie(lottie_coding, height=300, key="codings") 
 
 # Display Title and Description
 st.title("🏃‍♂️Running and Cycling Report🚴‍♂️")
@@ -94,7 +129,7 @@ if selected == "Running and Cycling Data Entry":
                     
                     st.success("Running details successfully submitted!") 
 
-if selected == "Running and Cycling Reports":
+if selected == "Running and Cycling Reports": 
         col = st.columns(3)
         with col[1]:
             st.write(f"{selected}")
@@ -130,48 +165,37 @@ if selected == "Dashboard":
             df = existing_data
 
             # KPI Cards
-            col1 = st.columns(5)
-            with col1[0]:
-                st.write("Total Distance")
-            with col1[1]:
-                st.write("Duration")
-            with col1[2]:
-                st.write("Calories")
-            with col1[3]:
-                st.write("Running Distance")
-            with col1[4]:
-                st.write("Cycling Distance")                
-    
-                
             col2 = st.columns(5)
-            
+            st.markdown(
+                """
+                <style>
+                [data-testid="stMetricValue"] {
+                    font-size: 20px;
+                }
+                </style>
+                """,
+                    unsafe_allow_html=True,
+                )
             with col2[0]:
                 Total_distance = (existing_data["Distance KM"].sum())
-                st.subheader((f"{Total_distance:.1f} KM"))
+                st.metric(label="Total Distance",value=(f"{Total_distance:.1f} KM"),delta=existing_data["Target Distance"].sum())
             with col2[1]:
                 existing_data["Duration"] =  pd.to_timedelta(existing_data["Duration"])
                 timing_data = existing_data["Duration"].sum()
-                st.subheader(timing_data)
+                st.metric(label="Duration",value=(f"{timing_data}"))
             with col2[2]:    
                 Total_calories = int(existing_data["Calories"].sum())
-                st.subheader((f"{Total_calories}"))
+                st.metric(label="Calories",value=(f"{Total_calories}"))
             with col2[3]:
                 group_running = df[df["Activity"]=="Running"]
                 total_running_distance = (group_running["Distance KM"].sum())
-                st.subheader((f"{total_running_distance:.1f} KM"))
+                st.metric(label="Running Distance",value=(f"{total_running_distance:.1f} KM"), delta=group_running["Target Distance"].sum())
             with col2[4]:
                 group_cycling = df[df["Activity"]=="Cycling"]
                 total_cycling_distance = (group_cycling["Distance KM"].sum())
-                st.subheader((f"{total_cycling_distance:.1f} KM"))
+                st.metric(label="Cycling Distance",value=(f"{total_cycling_distance:.1f} KM"),delta=group_cycling["Target Distance"].sum())
             st.write("---")
     #---------------------- Data Charts-----------------------
-            
-            # Add new column of month
-            # df['Date'] = pd.to_datetime(df.Date)
-            # df['Month']=df['Date'].map(lambda x:x.month)
-            
-            # Add new column of year
-            # df['Year']=df['Date'].map(lambda x:x.year)
         
             activity = st.multiselect(
                 "Select the activity:",
@@ -249,37 +273,36 @@ if selected == "Dashboard":
                 daily_report = df.query("Month ==@month & Year ==@year & Activity==@activity")     
                 
                 # KPI Cards
-                col1 = st.columns(5)
-                with col1[0]:
-                    st.write("Total Distance")
-                with col1[1]:
-                    st.write("Duration")
-                with col1[2]:
-                    st.write("Calories")
-                with col1[3]:
-                    st.write("Running Distance")
-                with col1[4]:
-                    st.write("Cycling Distance")                
+                st.markdown(
+                """
+                <style>
+                [data-testid="stMetricValue"] {
+                    font-size: 20px;
+                }
+                </style>
+                """,
+                    unsafe_allow_html=True,
+                )                
                 col2 = st.columns(5)
                     
                 with col2[0]:
                     Total_distance = (daily_report["Distance KM"].sum())
-                    st.subheader((f"{Total_distance:.1f} KM"))       
+                    st.metric(label="Total Distance",value=(f"{Total_distance:.1f} KM"), delta=daily_report["Target Distance"].sum())       
                 with col2[1]:      
                     daily_report["Duration"] =  pd.to_timedelta(daily_report["Duration"])
                     timing_data = daily_report["Duration"].sum()
-                    st.subheader((f"{timing_data}"))  
+                    st.metric(label="Duration",value=(f"{timing_data}"))  
                 with col2[2]:
                     Total_calories = int(daily_report["Calories"].sum())
-                    st.subheader((f"{Total_calories}"))
+                    st.metric(label="Calories",value=(f"{Total_calories}"))
                 with col2[3]:
                     group_running = daily_report[daily_report["Activity"]=="Running"]
                     total_running_distance = (group_running["Distance KM"].sum())
-                    st.subheader((f"{total_running_distance:.1f} KM"))
+                    st.metric(label="Running Distance",value=(f"{total_running_distance:.1f} KM"), delta=group_running["Target Distance"].sum())
                 with col2[4]:
                     group_cycling = daily_report[daily_report["Activity"]=="Cycling"]
                     total_cycling_distance = (group_cycling["Distance KM"].sum())
-                    st.subheader((f"{total_cycling_distance:.1f} KM"))
+                    st.metric(label="Cycling Distance",value=(f"{total_cycling_distance:.1f} KM"),delta=group_cycling["Target Distance"].sum())
                 st.write("---")
                 
                 # st.line_chart(
