@@ -3,3 +3,4 @@ st-gsheets-connection
 streamlit-option-menu
 plotly==5.11.0
 matplotlib==3.9.1
+streamlit-lottie==0.0.5
