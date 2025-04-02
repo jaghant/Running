@@ -113,7 +113,7 @@ if selected == "Running and Cycling Reports":
         existing_data = existing_data.dropna(how="all")
         
         # st.dataframe(existing_data) 
-        with card_container(key="table1"):
+        with card_container(key="table"):
              ui.table(data=existing_data, maxHeight=1)   
 
 if selected == "Dashboard":
