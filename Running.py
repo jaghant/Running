@@ -1,7 +1,8 @@
-import streamlit as st
-from streamlit_gsheets import GSheetsConnection
-import pandas as pd
-from streamlit_option_menu import option_menu
+import streamlit as st # pip install streamlit
+import streamlit_shadcn_ui as ui # pip install streamlit-shadcn-ui
+from streamlit_gsheets import GSheetsConnection # pip install st-gsheets-connection
+import pandas as pd # pip install pandas
+from streamlit_option_menu import option_menu # pip install streamlit-option-menu
 import numpy as np
 import plotly.express as px
 import altair as alt
@@ -9,43 +10,12 @@ from datetime import datetime, timedelta
 import calendar
 import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw
-from streamlit_lottie import st_lottie
+from streamlit_lottie import st_lottie # pip install streamlit-lottie
 import requests
+from PIL import Image
+from local_components import card_container
 
-col = st.columns(2)
-with col[0]:
-    def load_lottieurl(url):
-        r = requests.get(url)
-        if r.status_code != 200:
-            return None
-        return r.json()
-
-    def local_css(file_name):
-        with open(file_name) as f:
-            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-            
-    local_css("style/style.css")        
-
-    # lottie_coding = load_lottieurl("https://assets2.lottiefiles.com/packages/lf20_qp1q7mct.json")
-    lottie_coding = load_lottieurl("https://lottie.host/d4771593-ddbe-4d4c-8473-0ce408df46a8/RZFTyqxTac.json")
-    st_lottie(lottie_coding, height=300, key="coding") 
-    
-with col[1]:
-    def load_lottieurl(url):
-        r = requests.get(url)
-        if r.status_code != 200:
-            return None
-        return r.json()
-
-    def local_css(file_name):
-        with open(file_name) as f:
-            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-            
-    local_css("style/style.css")        
-
-    # lottie_coding = load_lottieurl("https://assets2.lottiefiles.com/packages/lf20_qp1q7mct.json")
-    lottie_coding = load_lottieurl("https://lottie.host/e16ec840-4e5c-4a97-a633-fac7402f0b1d/oevw9M7t1z.json")
-    st_lottie(lottie_coding, height=300, key="codings") 
+st.set_page_config(layout="wide")
 
 # Display Title and Description
 st.title("🏃‍♂️Running and Cycling Report🚴‍♂️")
@@ -91,6 +61,7 @@ if selected == "Running and Cycling Data Entry":
             Duration = st.text_input("Duration")
             Calories = st.number_input("Calories")
             Target_Distance = st.text_input("Target Distance")
+            # uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
             
             # Mark Mandatory fields
             st.markdown("**required*")
@@ -115,7 +86,8 @@ if selected == "Running and Cycling Data Entry":
                                 "Calories": Calories,
                                 "Target Distance": Target_Distance,
                                 "Month": Month,
-                                "Year": Year
+                                "Year": Year,
+                                # "Upload":uploaded_file
                                 
                             }
                         ]
@@ -140,7 +112,9 @@ if selected == "Running and Cycling Reports":
         existing_data = conn.read(worksheet="Running", usecols=list(range(8)), ttl=5)
         existing_data = existing_data.dropna(how="all")
         
-        st.dataframe(existing_data)    
+        # st.dataframe(existing_data) 
+        with card_container(key="table1"):
+             ui.table(data=existing_data, maxHeight=1)   
 
 if selected == "Dashboard":
         col = st.columns(3)
@@ -149,7 +123,7 @@ if selected == "Dashboard":
         
         selected = option_menu(
         menu_title    = None,
-        options       = ["Yearly Report", "Daily Report"],
+        options       = ["Yearly Report", "Monthly Report"],
         icons         = ["diagram-3-fill", "bar-chart-fill"],
         menu_icon     = "cast",
         default_index = 0,
@@ -157,13 +131,12 @@ if selected == "Dashboard":
         )
         if selected == "Yearly Report":
             
-            st.subheader("-------------🏃‍♂️-------------Yearly Report-------------🚴‍♂️-------------")
             st.write("----")
             conn = st.connection("gsheets", type=GSheetsConnection)
             existing_data = conn.read(wordsheet="Running", usecols=list(range(8)), ttl=5)
             existing_data = existing_data.dropna(how="all")
             df = existing_data
-
+            
             # KPI Cards
             col2 = st.columns(5)
             st.markdown(
@@ -178,22 +151,22 @@ if selected == "Dashboard":
                 )
             with col2[0]:
                 Total_distance = (existing_data["Distance KM"].sum())
-                st.metric(label="Total Distance",value=(f"{Total_distance:.1f} KM"),delta=existing_data["Target Distance"].sum())
+                ui.card(title="Total Distance",content=(f"{Total_distance:.1f} KM")).render()
             with col2[1]:
                 existing_data["Duration"] =  pd.to_timedelta(existing_data["Duration"])
                 timing_data = existing_data["Duration"].sum()
-                st.metric(label="Duration",value=(f"{timing_data}"))
+                ui.card(title="Duration",content=(f"{timing_data}")).render()
             with col2[2]:    
                 Total_calories = int(existing_data["Calories"].sum())
-                st.metric(label="Calories",value=(f"{Total_calories}"))
+                ui.card(title="Calories",content=(f"{Total_calories}")).render()
             with col2[3]:
                 group_running = df[df["Activity"]=="Running"]
                 total_running_distance = (group_running["Distance KM"].sum())
-                st.metric(label="Running Distance",value=(f"{total_running_distance:.1f} KM"), delta=group_running["Target Distance"].sum())
+                ui.card(title="Running Distance",content=(f"{total_running_distance:.1f} KM")).render()
             with col2[4]:
                 group_cycling = df[df["Activity"]=="Cycling"]
                 total_cycling_distance = (group_cycling["Distance KM"].sum())
-                st.metric(label="Cycling Distance",value=(f"{total_cycling_distance:.1f} KM"),delta=group_cycling["Target Distance"].sum())
+                ui.card(title="Cycling Distance",content=(f"{total_cycling_distance:.1f} KM")).render()
             st.write("---")
     #---------------------- Data Charts-----------------------
         
@@ -224,12 +197,49 @@ if selected == "Dashboard":
                 width = 200,
                 height= 400
             )
-            st.subheader("------------🏃‍♂️--------Year Wise Distance KM----------🚴‍♂️----------")
-            st.altair_chart(year_chart, use_container_width=True)
+            st.subheader("Year Wise Distance KM")
+            # st.altair_chart(year_chart, use_container_width=True)
+
+            with card_container(key="chart1"):
+                st.vega_lite_chart(
+                    yearly_groupby,
+                    {
+                        "mark": {"type": "bar", "tooltip": True, 'fill': 'rgb(255, 255, 255)', 'cornerRadiusEnd': 10},
+                        "encoding": {
+                            "x": {"field": "Year", "type": "ordinal"},
+                            "y": {"field": "Distance KM", "type": "quantitative"}
+                        },
+                        "layer": [
+                    {
+                        "mark": "bar",
+                        "encoding": {
+                            "x": {"field": "Year", "type": "ordinal"},
+                            "y": {"field": "Distance KM", "type": "quantitative"}
+                        }
+                    },
+                    {
+                        "mark": {
+                            "type": "text",
+                            "align": "center",
+                            "dy": 20,  # Adjust position
+                            "fontSize": 20
+                        },
+                        "encoding": {
+                            "x": {"field": "Year", "type": "ordinal"},
+                            "y": {"field": "Distance KM", "type": "quantitative"},
+                            "text": {"field": "Distance KM", "type": "quantitative"}
+                        }
+                        }
+                    ]
+                        
+                    },
+                use_container_width=True)
+            
+            
         
             
-        if selected == "Daily Report":
-                st.subheader("Daily Report")
+        if selected == "Monthly Report":
+                st.subheader("Monthly Report")
                 st.write("----")
                 
                 
@@ -238,6 +248,42 @@ if selected == "Dashboard":
                 existing_data = existing_data.dropna(how="all")
                 df = existing_data
                 
+                col = st.sidebar.columns(2)
+                with col[0]:
+                    def load_lottieurl(url):
+                        r = requests.get(url)
+                        if r.status_code != 200:
+                            return None
+                        return r.json()
+
+                    def local_css(file_name):
+                        with open(file_name) as f:
+                            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+                            
+                    local_css("style/style.css")        
+
+                    # lottie_coding = load_lottieurl("https://assets2.lottiefiles.com/packages/lf20_qp1q7mct.json")
+                    lottie_coding = load_lottieurl("https://lottie.host/d4771593-ddbe-4d4c-8473-0ce408df46a8/RZFTyqxTac.json")
+                    st_lottie(lottie_coding, height=100, key="coding")   
+
+                with col[1]:
+                        def load_lottieurl(url):
+                            r = requests.get(url)
+                            if r.status_code != 200:
+                                return None
+                            return r.json()
+
+                        def local_css(file_name):
+                            with open(file_name) as f:
+                                st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+                                
+                        local_css("style/style.css")        
+
+                        # lottie_coding = load_lottieurl("https://assets2.lottiefiles.com/packages/lf20_qp1q7mct.json")
+                        lottie_coding = load_lottieurl("https://lottie.host/e16ec840-4e5c-4a97-a633-fac7402f0b1d/oevw9M7t1z.json")
+                        st_lottie(lottie_coding, height=115, key="codings")
+
+
                 # Define the correct order of months
                 month_order = [
                 "January", "February", "March", "April", "May", "June",
@@ -254,11 +300,13 @@ if selected == "Dashboard":
                 current_month = datetime.now().month
                 current_month_name = months[current_month - 1] 
                          
+                           
                 month = st.sidebar.multiselect(
                 "Select The Month:",
                 months,
                 default=[current_month_name]
                 )
+                
                 year = st.sidebar.multiselect(
                 "Select The Year:",
                 options=df["Year"].unique(),
@@ -287,29 +335,59 @@ if selected == "Dashboard":
                     
                 with col2[0]:
                     Total_distance = (daily_report["Distance KM"].sum())
-                    st.metric(label="Total Distance",value=(f"{Total_distance:.1f} KM"), delta=daily_report["Target Distance"].sum())       
+                    ui.card(title="Total Distance",content=(f"{Total_distance:.1f} KM")).render()       
                 with col2[1]:      
                     daily_report["Duration"] =  pd.to_timedelta(daily_report["Duration"])
                     timing_data = daily_report["Duration"].sum()
-                    st.metric(label="Duration",value=(f"{timing_data}"))  
+                    ui.card(title="Duration",content=(f"{timing_data}")).render() 
                 with col2[2]:
                     Total_calories = int(daily_report["Calories"].sum())
-                    st.metric(label="Calories",value=(f"{Total_calories}"))
+                    ui.card(title="Calories",content=(f"{Total_calories}")).render()
                 with col2[3]:
                     group_running = daily_report[daily_report["Activity"]=="Running"]
                     total_running_distance = (group_running["Distance KM"].sum())
-                    st.metric(label="Running Distance",value=(f"{total_running_distance:.1f} KM"), delta=group_running["Target Distance"].sum())
+                    ui.card(title="Running Distance",content=(f"{total_running_distance:.1f} KM")).render()
                 with col2[4]:
                     group_cycling = daily_report[daily_report["Activity"]=="Cycling"]
                     total_cycling_distance = (group_cycling["Distance KM"].sum())
-                    st.metric(label="Cycling Distance",value=(f"{total_cycling_distance:.1f} KM"),delta=group_cycling["Target Distance"].sum())
+                    ui.card(title="Cycling Distance",content=(f"{total_cycling_distance:.1f} KM")).render()
                 st.write("---")
                 
-                # st.line_chart(
-                #     daily_report,
-                #     x="Date",
-                #     y="Distance KM",
-                # )
                 
-                fig = px.line(daily_report, x="Date", y="Distance KM", text="Distance KM", markers=True)
-                st.plotly_chart(fig)
+                with card_container(key="chart1"):
+                    st.vega_lite_chart(
+                    daily_report,
+                    {
+                        "mark": {"type": "bar", "tooltip": True, 'fill': 'rgb(255, 255, 255)', 'cornerRadiusEnd': 4},
+                        "encoding": {
+                            "x": {"field": "Date", "type": "ordinal"},
+                            "y": {"field": "Distance KM", "type": "quantitative"},
+                        
+                        },
+                        "layer": [
+                    {
+                        "mark": "bar",
+                        "encoding": {
+                            "x": {"field": "Date", "type": "ordinal"},
+                            "y": {"field": "Distance KM", "type": "quantitative"}
+                        }
+                    },
+                    {
+                        "mark": {
+                            "type": "text",
+                            "align": "center",
+                            "dy": -20,  # Adjust position
+                            "fontSize": 10,
+                            "color" : "'#FF5733"
+                        },
+                        "encoding": {
+                            "x": {"field": "Date", "type": "ordinal"},
+                            "y": {"field": "Distance KM", "type": "quantitative"},
+                            "text": {"field": "Distance KM", "type": "quantitative"}
+                        }
+                        }
+                    ]
+                    },
+                    use_container_width=True)
+
+                            
