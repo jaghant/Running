@@ -200,8 +200,8 @@ if selected == "Dashboard":
             st.subheader("Year Wise Distance KM")
             # st.altair_chart(year_chart, use_container_width=True)
 
-            with card_container(key="chart1"):
-                st.vega_lite_chart(
+            
+            st.vega_lite_chart(
                     yearly_groupby,
                     {
                         "mark": {"type": "bar", "tooltip": True, 'fill': 'rgb(255, 255, 255)', 'cornerRadiusEnd': 10},
@@ -354,8 +354,7 @@ if selected == "Dashboard":
                 st.write("---")
                 
                 
-                with card_container(key="chart1"):
-                    st.vega_lite_chart(
+                st.vega_lite_chart(
                     daily_report,
                     {
                         "mark": {"type": "bar", "tooltip": True, 'fill': 'rgb(255, 255, 255)', 'cornerRadiusEnd': 4},
