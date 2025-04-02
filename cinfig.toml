@@ -1,5 +1,12 @@
+# [theme]
+# backgroundColor="#fbfbfb"
+# secondaryBackgroundColor="#99c2f1"
+# textColor="#000000"
+# font="serif"
+
 [theme]
-backgroundColor="#fbfbfb"
-secondaryBackgroundColor="#99c2f1"
-textColor="#000000"
+base="dark"
+primaryColor="#084eff"
+secondaryBackgroundColor="#bbbbbd"
+textColor="#ffffff"
 font="serif"
